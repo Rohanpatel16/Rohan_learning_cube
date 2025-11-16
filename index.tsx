@@ -1,0 +1,344 @@
+import React, { useState } from 'react';
+import { createRoot } from 'react-dom/client';
+
+// --- Data ---
+
+const pllAlgorithms = [
+  { name: 'H', group: 'Edges Only', algorithm: "M2 U' M2 U2 M2 U' M2", image: "https://in.speedcube.com.au/cdn/shop/articles/h_3dfd5389-85ce-46da-a20f-cee271f7cd80_200x.png?v=1704586030" },
+  { name: 'Ua', group: 'Edges Only', algorithm: "R U' R U R U R U' R' U' R2", image: "https://in.speedcube.com.au/cdn/shop/articles/ua_533d3141-0f09-4915-8929-f923867661df_200x.png?v=1704584285" },
+  { name: 'Ub', group: 'Edges Only', algorithm: "R2 U R U R' U' R' U' R' U R'", image: "https://in.speedcube.com.au/cdn/shop/articles/ub_2dcfee18-ac4c-47e5-a67c-3d41646223c4_200x.png?v=1704584588" },
+  { name: 'Z', group: 'Edges Only', algorithm: "M2' U' M2' U' M' U2 M2' U2 M' U2", image: "https://in.speedcube.com.au/cdn/shop/articles/z_829e12ef-a4f2-48ce-a3e6-d2d7c1387c9d_200x.png?v=1704584564" },
+  { name: 'Aa', group: 'Adjacent Corner Swap', algorithm: "x R' U R' D2 R U' R' D2 R2 x'", image: "https://in.speedcube.com.au/cdn/shop/articles/aa_971fcf0a-d4dc-4ad8-8ece-36e0a6661b86_200x.png?v=1704585620"},
+  { name: 'Ab', group: 'Adjacent Corner Swap', algorithm: "x R2 D2 R U R' D2 R U' R", image: "https://in.speedcube.com.au/cdn/shop/articles/ab_2c455850-21aa-49d4-969b-b3e4a629433f_200x.png?v=1704584482" },
+  { name: 'Ja', group: 'Adjacent Corner Swap', algorithm: "R' U L' U2 R U' R' U2 R L U'", image: "https://in.speedcube.com.au/cdn/shop/articles/ja_5aff4fb2-a90c-46e4-bf20-c05be4ecbcb0_200x.png?v=1704586317" },
+  { name: 'Jb', group: 'Adjacent Corner Swap', algorithm: "R U R' F' R U R' U' R' F R2 U' R' U'", image: "https://in.speedcube.com.au/cdn/shop/articles/jb_fafee995-788b-4ac0-891d-303f0144a6ba_200x.png?v=1704585783" },
+  { name: 'Ra', group: 'Adjacent Corner Swap', algorithm: "R U' R' U' R U R D R' U' R D' R' U2 R' U'", image: "https://in.speedcube.com.au/cdn/shop/articles/ra_ac0767c6-1235-41f3-b1ee-df25575aa3cf_200x.png?v=1704586135" },
+  { name: 'Rb', group: 'Adjacent Corner Swap', algorithm: "R' U2 R U2 R' F R U R' U' R' F' R2 U'", image: "https://in.speedcube.com.au/cdn/shop/articles/rb_fd0685b0-7916-4e8d-90de-38beb8f244f3_200x.png?v=1704584104" },
+  { name: 'T', group: 'Adjacent Corner Swap', algorithm: "R U R' U' R' F R2 U' R' U' R U R' F'", image: "https://in.speedcube.com.au/cdn/shop/articles/t_bb1695ce-f9b6-4926-a718-195ff6f759fd_200x.png?v=1704585567" },
+  { name: 'F', group: 'Adjacent Corner Swap', algorithm: "R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R", image: "https://in.speedcube.com.au/cdn/shop/articles/f_0a083128-752a-468d-9a10-3ea50d6f9ee0_200x.png?v=1704584936" },
+  { name: 'V', group: 'Diagonal Corner Swap', algorithm: "R' U R' U' y R' F' R2 U' R' U R' F R F", image: "https://in.speedcube.com.au/cdn/shop/articles/v_a848873c-79f3-431c-8b98-3150a0b64aa2_200x.png?v=1704585268" },
+  { name: 'Y', group: 'Diagonal Corner Swap', algorithm: "F R U' R' U' R U R' F' R U R' U' R' F R F'", image: "https://in.speedcube.com.au/cdn/shop/articles/y_78a07ec3-208b-4129-9a69-43159cb19a3e_200x.png?v=1704586278" },
+  { name: 'Na', group: 'Diagonal Corner Swap', algorithm: "R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'", image: "https://in.speedcube.com.au/cdn/shop/articles/na_28d095ca-f5d1-48d2-97d1-6672428b3a4d_200x.png?v=1704584339" },
+  { name: 'Nb', group: 'Diagonal Corner Swap', algorithm: "R' U R U' R' F' U' F R U R' F R' F' R U' R", image: "https://in.speedcube.com.au/cdn/shop/articles/nb_260e6cf6-22ef-4218-975b-ba9d48b937ac_200x.png?v=1704584708" },
+  { name: 'Ga', group: 'Corner-edge Swap', algorithm: "R2 u R' U R' U' R u' R2 y' R' U R", image: "https://in.speedcube.com.au/cdn/shop/articles/ga_51fae21c-4fed-466e-88bf-96518730a0c2_200x.png?v=1704584305" },
+  { name: 'Gb', group: 'Corner-edge Swap', algorithm: "F' U' F R2 u R' U R U' R u' R2'", image: "https://in.speedcube.com.au/cdn/shop/articles/gb_5cde8f32-3565-45b3-839c-e8a064a2c6a3_200x.png?v=1704585973" },
+  { name: 'Gc', group: 'Corner-edge Swap', algorithm: "R2 U' R U' R U R' U R2 D' U R U' R' D U'", image: "https://in.speedcube.com.au/cdn/shop/articles/gc_5612f446-6915-462a-a894-84a31fa4bd39_200x.png?v=1704584825" },
+  { name: 'Gd', group: 'Corner-edge Swap', algorithm: "R U R' y' R2 u' R U' R' U R' u R2", image: "https://in.speedcube.com.au/cdn/shop/articles/gd_b09506e7-dfe4-4fa9-8c5e-5d559eacd829_200x.png?v=1704585507" },
+  { name: 'E', group: 'Diagonal Corner Swap', algorithm: "x' R U' R' D R U R' D' R U R' D R U' R' D' x", image: "https://in.speedcube.com.au/cdn/shop/articles/e_967e7b62-a326-43ca-9933-64539ffcc02c_200x.png?v=1704584760" },
+];
+
+const ollAlgorithms = [
+    { case: 1, name: "2-look", algorithm: "R U2' R2' F R F' U2 R' F R F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll1_5eb853a3-0083-449b-820a-c396bd96773a_200x.png?v=1704584898" },
+    { case: 2, name: "2-look", algorithm: "F R U R' U' F' f R U R' U' f'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll2_04016b00-c19f-4e62-8751-2f22968748e0_200x.png?v=1704584900" },
+    { case: 3, name: "Sune/Anti-Sune family", algorithm: "f R U R' U' f' U' F R U R' U' F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll3_0bb55b60-bcde-4427-b2d6-595f01540405_200x.png?v=1704584434" },
+    { case: 4, name: "Sune/Anti-Sune family", algorithm: "f R U R' U' f' U F R U R' U' F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll4_11e77a19-0f55-4827-87f3-8de35f2d30ac_200x.png?v=1704586335" },
+    { case: 5, name: "Wide Block Shapes", algorithm: "r' U2' R U R' U r", image: "https://in.speedcube.com.au/cdn/shop/articles/oll5_81b44bc9-4a82-44ff-94d8-873a9586986f_200x.png?v=1704585891" },
+    { case: 6, name: "Wide Block Shapes", algorithm: "r U2 R' U' R U' r'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll6_2d865357-df5c-48c0-9ad4-1b3005b558bc_200x.png?v=1704585888" },
+    { case: 7, name: "T-Shapes", algorithm: "r U R' U R U2' r'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll7_60502787-da8e-43a3-b863-5ef8c7033c26_200x.png?v=1704585352" },
+    { case: 8, name: "T-Shapes", algorithm: "r' U' R U' R' U2 r", image: "https://in.speedcube.com.au/cdn/shop/articles/oll8_f3911448-8081-45b1-8f8a-3730786d1857_200x.png?v=1704586201" },
+    { case: 9, name: "L-Shapes", algorithm: "R U R' U' R' F R2 U R' U' F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll9_dbfae90e-52db-4fa5-a443-f1c3a69a5aee_200x.png?v=1704586111" },
+    { case: 10, name: "L-Shapes", algorithm: "R U R' U R' F R F' R U2' R'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll10_57b5a01a-4703-4a4c-8a47-895c7b819be0_200x.png?v=1704584160" },
+    { case: 11, name: "P-Shapes", algorithm: "r' R2 U R' U R U2 R' U M'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll11_bc51814c-97f7-4ab2-97fe-d748586a1403_200x.png?v=1704584626" },
+    { case: 12, name: "P-Shapes", algorithm: "M' R' U' R U' R' U2 R U' M", image: "https://in.speedcube.com.au/cdn/shop/articles/oll12_e3ca8475-74f7-40ac-902c-9437c124025f_200x.png?v=1704584252" },
+    { case: 13, name: "W-Shapes", algorithm: "r U' r' U' r U r' y' R' U R", image: "https://in.speedcube.com.au/cdn/shop/articles/oll13_999f7d28-7a15-4a97-99ff-ecf4008ecac0_200x.png?v=1704585246" },
+    { case: 14, name: "W-Shapes", algorithm: "R' F R U R' F' R F U' F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll14_81cb5366-b828-4000-bbfa-e897e313b755_200x.png?v=1704585342" },
+    { case: 15, name: "Square Shapes", algorithm: "r' U' r R' U' R U r' U r", image: "https://in.speedcube.com.au/cdn/shop/articles/oll15_f86f7a5e-81ca-4d0d-bfd7-63e85b2a8db0_200x.png?v=1704585856" },
+    { case: 16, name: "Square Shapes", algorithm: "r U r' R U R' U' r U' r'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll16_72fd0eaf-5bb8-42ad-a00f-a8f9b3bd02ce_200x.png?v=1704584510" },
+    { case: 17, name: "Knight Move Shapes", algorithm: "R U R' U R' F R F' U2' R' F R F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll17_f0c3d1ad-c777-4ed8-a652-f7cbe525c2ae_200x.png?v=1704585662" },
+    { case: 18, name: "Knight Move Shapes", algorithm: "r U R' U R U2 r2 U' R U' R' U2 r", image: "https://in.speedcube.com.au/cdn/shop/articles/oll18_e6fc5058-9a8d-4182-9759-e8d8b57bc126_200x.png?v=1704585288" },
+    { case: 19, name: "Knight Move Shapes", algorithm: "M U R U R' U' M' R' F R F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll19_e20cadc3-5df9-44a4-ae4a-1db74a54a54f_200x.png?v=1704585679" },
+    { case: 20, name: "Knight Move Shapes", algorithm: "M U R U R' U' M2' U R U' r'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll20_9068152d-aabc-4332-b692-8e5cff2f1560_200x.png?v=1704585144" },
+    { case: 21, name: "Cross", algorithm: "R U2 R' U' R U R' U' R U' R'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll21_4133c9f1-a90f-427c-a681-a20ab1b0022e_200x.png?v=1734676730" },
+    { case: 22, name: "Cross", algorithm: "R U2 R2 U' R2 U' R2 U2 R", image: "https://in.speedcube.com.au/cdn/shop/articles/oll22_520x500_1dd23233-832a-4cf3-ba47-00a2a3ea5f35_200x.png?v=1734676800" },
+    { case: 23, name: "Cross", algorithm: "R2 D R' U2 R D' R' U2 R'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll23_163ed1ce-e800-423c-aba3-29da08053c92_200x.png?v=1704584603" },
+    { case: 24, name: "Cross", algorithm: "r U R' U' r' F R F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll24_2d0baecd-e4aa-4ae8-a68e-46fe118304e6_200x.png?v=1704585495" },
+    { case: 25, name: "Cross", algorithm: "F' r U R' U' r' F R", image: "https://in.speedcube.com.au/cdn/shop/articles/oll25_d917c3ac-6651-48dc-a82d-2f252cb1b6dc_200x.png?v=1704585155" },
+    { case: 26, name: "Cross", algorithm: "R U2 R' U' R U' R'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll26_04a32d53-a35a-48ee-bf98-02c2b32d87bd_200x.png?v=1704585286" },
+    { case: 27, name: "Cross", algorithm: "R U R' U R U2' R'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll27_67ab6648-4727-47ab-8db7-250354faeab3_200x.png?v=1704584596" },
+    { case: 28, name: "All Corners Oriented", algorithm: "r U R' U' M U R U' R'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll28_c5a90efe-bf95-47b3-bac9-4a1581085906_200x.png?v=1704585844" },
+    { case: 29, name: "Awkward Shapes", algorithm: "y R U R' U' R U' R' F' U' F R U R'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll29_325b0d97-d8a6-4551-9043-5f7d2cb77f53_200x.png?v=1704584176" },
+    { case: 30, name: "Awkward Shapes", algorithm: "F U R U2 R' U' R U2 R' U' F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll30_4b817145-bf55-4218-90dd-7441427a695a_200x.png?v=1704585366" },
+    { case: 31, name: "P-Shapes", algorithm: "R' U' F U R U' R' F' R", image: "https://in.speedcube.com.au/cdn/shop/articles/oll31_ba588f7c-d19f-4dd0-909e-e147538d9aaa_200x.png?v=1704585444" },
+    { case: 32, name: "P-Shapes", algorithm: "R U B' U' R' U R B R'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll32_c57d8496-b633-47da-ba02-d9248f2a6ea4_200x.png?v=1704585380" },
+    { case: 33, name: "T-Shapes", algorithm: "R U R' U' R' F R F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll33_b0b04ec5-7e61-4b5e-a4bd-871af9b4a2b3_200x.png?v=1704584633" },
+    { case: 34, name: "C-Shapes", algorithm: "R U R2' U' R' F R U R U' F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll34_24dec5b4-43d9-456c-b3d5-f7d7772d9720_200x.png?v=1704584237" },
+    { case: 35, name: "Fish Shapes", algorithm: "R U2' R2' F R F' R U2' R'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll35_200x.png?v=1734676867" },
+    { case: 36, name: "W-Shapes", algorithm: "R' U' R U' R' U R U l U' R' U x", image: "https://in.speedcube.com.au/cdn/shop/articles/oll36_58362c72-3883-40aa-bde2-959fa968a367_200x.png?v=1704586243" },
+    { case: 37, name: "Fish Shapes", algorithm: "F R U' R' U' R U R' F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll37_fbd06acd-6537-466c-9f82-ae2b368f9ae4_200x.png?v=1704585452" },
+    { case: 38, name: "W-Shapes", algorithm: "R U R' U R U' R' U' R' F R F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll38_6a4066d9-65ca-462f-9e60-3b730e0fda8e_200x.png?v=1704585837" },
+    { case: 39, name: "Lightning Bolt Shapes", algorithm: "L F' L' U' L U F U' L'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll39_f86e5dcc-433d-45f2-ad87-274141cd44f1_200x.png?v=1704585730" },
+    { case: 40, name: "Lightning Bolt Shapes", algorithm: "R' F R U R' U' F' U R", image: "https://in.speedcube.com.au/cdn/shop/articles/oll40_7de769ef-38da-458c-9c49-b59b85ba88c0_200x.png?v=1704584656" },
+    { case: 41, name: "Awkward Shapes", algorithm: "R U R' U R U2' R' F R U R' U' F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll41_b845d376-2634-42ad-bdd7-bba26f0e5b79_200x.png?v=1704585126" },
+    { case: 42, name: "Awkward Shapes", algorithm: "R' U' R U' R' U2 R F R U R' U' F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll42_e6a7326c-cc0c-4e1a-8eb2-cdd2f4b4ffcb_200x.png?v=1704584413" },
+    { case: 43, name: "P-Shapes", algorithm: "R' U' F' U F R", image: "https://in.speedcube.com.au/cdn/shop/articles/oll43_88acd672-0334-47a4-b444-21b8da420a23_200x.png?v=1704585735" },
+    { case: 44, name: "P-Shapes", algorithm: "f R U R' U' f'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll44_2c962b5b-2ab8-4932-9999-17e8880b3ef1_200x.png?v=1704584171" },
+    { case: 45, name: "T-Shapes", algorithm: "F R U R' U' F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll45_fa7918e5-bff1-42e9-9a92-f9a9f1e814b2_200x.png?v=1704585081" },
+    { case: 46, name: "C-Shapes", algorithm: "R' U' R' F R F' U R", image: "https://in.speedcube.com.au/cdn/shop/articles/oll46_2eb2b39e-c173-4184-a8c2-cfec7fd5d4ff_200x.png?v=1704585798" },
+    { case: 47, name: "L-Shapes", algorithm: "F' L' U' L U L' U' L U F", image: "https://in.speedcube.com.au/cdn/shop/articles/oll47_46ead636-28d1-41d4-a8c6-1366e796a947_200x.png?v=1704585213" },
+    { case: 48, name: "L-Shapes", algorithm: "F R U R' U' R U R' U' F'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll48_320fbc3c-d2d9-4060-ba58-79e05f8cdfe8_200x.png?v=1704585581" },
+    { case: 49, name: "L-Shapes", algorithm: "r U' r2' U r2 U r2' U' r", image: "https://in.speedcube.com.au/cdn/shop/articles/oll49_f8bd5004-33a8-4c92-ae26-87a756da0012_200x.png?v=1704585018" },
+    { case: 50, name: "L-Shapes", algorithm: "r' U r2 U' r2' U' r2 U r'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll50_80bec3d7-f696-4caa-a8e4-229809d60cba_200x.png?v=1704584186" },
+    { case: 51, name: "I-Shapes", algorithm: "f R U R' U' R U R' U' f'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll51_75707b57-6d95-4a98-af32-b74734189fb7_200x.png?v=1704586093" },
+    { case: 52, name: "I-Shapes", algorithm: "R' U' R U' R' U y' R' U R B", image: "https://in.speedcube.com.au/cdn/shop/articles/oll52_b2c788a9-5280-41f4-b6e3-430087ab4161_200x.png?v=1704584249" },
+    { case: 53, name: "L-Shapes", algorithm: "r' U' R U' R' U R U' R' U2 r", image: "https://in.speedcube.com.au/cdn/shop/articles/oll53_b352beae-d4d5-4a7e-91db-d5c40d04e403_200x.png?v=1704584341" },
+    { case: 54, name: "L-Shapes", algorithm: "r U R' U R U' R' U R U2' r'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll54_90a20a4d-7342-4972-b10d-6dcae7777829_200x.png?v=1704586150" },
+    { case: 55, name: "I-Shapes", algorithm: "y R' F R U R U' R2' F' R2 U' R' U R U R'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll55_b86bbded-6dc1-453d-9dea-bd58e49f52c2_200x.png?v=1704584865" },
+    { case: 56, name: "I-Shapes", algorithm: "r' U' r U' R' U R U' R' U R r' U r", image: "https://in.speedcube.com.au/cdn/shop/articles/oll56_1e4efb4d-e841-40c6-972b-d491fbfd6226_200x.png?v=1704585598" },
+    { case: 57, name: "All Corners Oriented", algorithm: "R U R' U' M' U R U' r'", image: "https://in.speedcube.com.au/cdn/shop/articles/oll57_088ac901-4d45-4695-9d3a-8ec4765b7aa7_200x.png?v=1704586185" },
+];
+
+
+// --- Components ---
+
+const CaseVisual = ({ image, name }: { image?: string; name: string }) => {
+    return (
+        <div className="case-visual">
+            {image ? (
+                <img src={image} alt={`${name} diagram`} className="case-image" />
+            ) : (
+                <p className="case-placeholder">Visual</p>
+            )}
+        </div>
+    );
+};
+
+// Fix: Add explicit types for component props to resolve TS error and improve type safety.
+interface AlgorithmData {
+    name: string;
+    algorithm: string;
+    group?: string;
+    case?: number;
+    image?: string;
+}
+
+interface AlgorithmCardProps {
+    data: AlgorithmData;
+    type: 'PLL' | 'OLL';
+}
+
+
+const AlgorithmCard = ({ data, type }: AlgorithmCardProps) => {
+    const isOLL = type === 'OLL';
+    const title = isOLL ? `OLL Case ${data.case!}` : data.name;
+    const subtitle = isOLL ? data.name : data.group!;
+
+    return (
+        <div className="card">
+            <div className="card-visual">
+                 <CaseVisual image={data.image} name={title} />
+            </div>
+            <div className="card-content">
+                <h3>{title}</h3>
+                <p className="subtitle">{subtitle}</p>
+                <p className="algorithm">{data.algorithm}</p>
+            </div>
+        </div>
+    );
+};
+
+const App = () => {
+    const [activeSet, setActiveSet] = useState<'PLL' | 'OLL'>('PLL');
+
+    const algorithmsToDisplay = activeSet === 'PLL' ? pllAlgorithms : ollAlgorithms.sort((a,b) => a.case - b.case);
+
+    return (
+        <>
+        <style>{`
+            :root {
+                --background-color: #121212;
+                --surface-color: #1e1e1e;
+                --primary-color: #fdd835; /* Yellow */
+                --on-surface-color: #e0e0e0;
+                --on-surface-variant-color: #9e9e9e;
+                --border-color: #2c2c2c;
+            }
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            html {
+                font-family: 'Inter', sans-serif;
+                background-color: var(--background-color);
+                color: var(--on-surface-color);
+                font-size: 16px;
+            }
+            #root {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 1rem;
+                min-height: 100vh;
+            }
+            header {
+                width: 100%;
+                max-width: 800px;
+                text-align: center;
+                margin-bottom: 2rem;
+            }
+            h1 {
+                font-size: 2.5rem;
+                font-weight: 700;
+                margin-bottom: 1.5rem;
+            }
+            .toggle-container {
+                display: flex;
+                justify-content: center;
+                background-color: var(--surface-color);
+                border-radius: 99px;
+                padding: 5px;
+                position: relative;
+                width: 200px;
+                margin: 0 auto;
+            }
+            .toggle-btn {
+                flex: 1;
+                padding: 0.75rem 1rem;
+                border: none;
+                background-color: transparent;
+                color: var(--on-surface-variant-color);
+                font-size: 1rem;
+                font-weight: 500;
+                cursor: pointer;
+                transition: color 0.3s ease;
+                z-index: 2;
+                border-radius: 99px;
+            }
+            .toggle-btn.active {
+                color: #000;
+            }
+            .toggle-slider {
+                position: absolute;
+                top: 5px;
+                left: 5px;
+                width: calc(50% - 5px);
+                height: calc(100% - 10px);
+                background-color: var(--primary-color);
+                border-radius: 99px;
+                transition: transform 0.3s ease-in-out;
+                z-index: 1;
+            }
+            .toggle-container[data-active="OLL"] .toggle-slider {
+                transform: translateX(calc(100%));
+            }
+
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 1.5rem;
+                width: 100%;
+                max-width: 1200px;
+            }
+
+            .card {
+                background-color: var(--surface-color);
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                padding: 1.5rem;
+                display: flex;
+                flex-direction: column;
+                gap: 1.5rem;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                align-items: center;
+                text-align: center;
+            }
+
+            .card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            }
+            
+            .card-visual {
+                width: 120px;
+                height: 120px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background-color: var(--background-color);
+                border-radius: 8px;
+            }
+            
+            .case-visual {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 100%;
+                height: 100%;
+                color: var(--on-surface-variant-color);
+            }
+
+            .case-image {
+                max-width: 100px;
+                max-height: 100px;
+                object-fit: contain;
+            }
+            
+            .case-placeholder {
+                font-style: italic;
+                font-size: 0.9rem;
+            }
+
+            .card-content {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            h3 {
+                font-size: 1.25rem;
+                font-weight: 700;
+            }
+
+            .subtitle {
+                color: var(--on-surface-variant-color);
+                font-size: 0.9rem;
+            }
+
+            .algorithm {
+                font-family: 'Roboto Mono', monospace;
+                font-size: 1.1rem;
+                color: var(--primary-color);
+                line-height: 1.4;
+                word-wrap: break-word;
+            }
+            
+            @media (min-width: 600px) {
+                .card {
+                    flex-direction: row;
+                    text-align: left;
+                }
+            }
+        `}</style>
+        <header>
+            <h1>Cube Algorithm Trainer</h1>
+            <div className="toggle-container" data-active={activeSet}>
+                <button 
+                    className={`toggle-btn ${activeSet === 'PLL' ? 'active' : ''}`} 
+                    onClick={() => setActiveSet('PLL')}
+                    aria-pressed={activeSet === 'PLL'}
+                >
+                    PLL
+                </button>
+                <button 
+                    className={`toggle-btn ${activeSet === 'OLL' ? 'active' : ''}`}
+                    onClick={() => setActiveSet('OLL')}
+                    aria-pressed={activeSet === 'OLL'}
+                >
+                    OLL
+                </button>
+                <div className="toggle-slider"></div>
+            </div>
+        </header>
+
+        <main className="grid">
+            {algorithmsToDisplay.map((alg, index) => (
+                <AlgorithmCard key={index} data={alg} type={activeSet} />
+            ))}
+        </main>
+        </>
+    );
+};
+
+const container = document.getElementById('root');
+const root = createRoot(container!);
+root.render(<App />);
